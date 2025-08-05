@@ -3,6 +3,7 @@ package ru.bicev.hotel_booking.common.util;
 import java.time.Instant;
 import java.util.UUID;
 
+import ru.bicev.hotel_booking.common.dto.PaymentRequestDto;
 import ru.bicev.hotel_booking.common.entity.Booking;
 import ru.bicev.hotel_booking.common.event.BookingCreatedEvent;
 
@@ -20,4 +21,9 @@ public class EventMapper {
         return event;
     }
 
+    public static PaymentRequestDto mapBookingCreatedToPaymentRequest(BookingCreatedEvent event) {
+        PaymentRequestDto requestDto = new PaymentRequestDto(event.bookingId(), event.userId(), event.amount());
+        return requestDto;
+
+    }
 }
