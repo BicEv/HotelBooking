@@ -44,14 +44,15 @@ public class RoomService {
         roomRepository.deleteById(roomId);
     }
 
+    public boolean roomExistsByUUID(UUID roomId) {
+        return roomRepository.existsById(roomId);
+    }
+
     private RoomDto mapToDto(Room room) {
         return new RoomDto(room.getId(), room.getNumber(), room.getType());
     }
 
-    private Room mapToEntity(RoomDto roomDto) {
-        UUID id = roomDto.id() != null ? roomDto.id() : UUID.randomUUID();
-        return new Room(id, roomDto.number(), roomDto.type());
-    }
+    
 
     private Room mapToEntity(CreateRoomDto roomDto) {
         return new Room(UUID.randomUUID(), roomDto.number(), roomDto.type());
