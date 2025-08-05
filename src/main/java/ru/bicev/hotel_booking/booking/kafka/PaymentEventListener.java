@@ -21,7 +21,7 @@ public class PaymentEventListener {
         this.bookingService = bookingService;
     }
 
-    @KafkaListener(topics = "payment.confirmed", groupId = "booking")
+    @KafkaListener(topics = "payment.confirmed", groupId = "payment-confirmed-consumer")
     public void handlePaymentConfirmed(String message) {
         try {
             PaymentCompletedEvent event = objectMapper.readValue(message, PaymentCompletedEvent.class);
@@ -31,7 +31,7 @@ public class PaymentEventListener {
         }
     }
 
-    @KafkaListener(topics = "payment.failed", groupId = "booking")
+    @KafkaListener(topics = "payment.failed", groupId = "payment-failed-consumer")
     public void handlePaymentCancelled(String message) {
         try {
             PaymentFailedEvent event = objectMapper.readValue(message, PaymentFailedEvent.class);
