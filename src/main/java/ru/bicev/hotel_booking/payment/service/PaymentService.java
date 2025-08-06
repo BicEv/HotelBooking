@@ -3,6 +3,8 @@ package ru.bicev.hotel_booking.payment.service;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import ru.bicev.hotel_booking.common.dto.PaymentDto;
@@ -12,6 +14,7 @@ import ru.bicev.hotel_booking.payment.kafka.PaymentEventProducer;
 @Service
 public class PaymentService {
 
+    private static final Logger logger = LoggerFactory.getLogger(PaymentService.class);
     private final PaymentEventProducer paymentEventProducer;
 
     public PaymentService(PaymentEventProducer paymentEventProducer) {
@@ -23,8 +26,10 @@ public class PaymentService {
         var payment = mapFromRequest(requestDto);
 
         if (success) {
+            logger.info("Payment success for booking:{}", requestDto.bookingId());
             paymentEventProducer.sendPaymentCompletedEvent(payment);
         } else {
+            logger.info("Payment failed for booking:{}", requestDto.bookingId());
             paymentEventProducer.sendPaymentFailedEvent(payment);
         }
 

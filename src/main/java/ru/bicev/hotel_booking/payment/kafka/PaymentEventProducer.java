@@ -3,6 +3,8 @@ package ru.bicev.hotel_booking.payment.kafka;
 import java.time.Instant;
 import java.util.UUID;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
@@ -16,6 +18,7 @@ import ru.bicev.hotel_booking.common.event.PaymentFailedEvent;
 @Service
 public class PaymentEventProducer {
 
+    private static final Logger logger = LoggerFactory.getLogger(PaymentEventProducer.class);
     private final ObjectMapper objectMapper;
     private final KafkaTemplate<String, String> kafkaTemplate;
 
@@ -32,7 +35,7 @@ public class PaymentEventProducer {
                 paymentDto.id(), paymentDto.userId());
         String json = serializeToJson(event);
         kafkaTemplate.send("payment.completed", event.eventId().toString(), json);
-
+        logger.info("PaymentCompletedEvent sent: {}", json);
     }
 
     public void sendPaymentFailedEvent(PaymentDto paymentDto) {
@@ -42,12 +45,14 @@ public class PaymentEventProducer {
         PaymentFailedEvent event = new PaymentFailedEvent(eventId, timestamp, paymentDto.bookingId(), "Payment failed");
         String json = serializeToJson(event);
         kafkaTemplate.send("payment.failed", event.eventId().toString(), json);
+        logger.info("PaymentFailedEvent sent: {}", json);
     }
 
     private String serializeToJson(PaymentCompletedEvent event) {
         try {
             return objectMapper.writeValueAsString(event);
         } catch (JsonProcessingException e) {
+            logger.info("PaymentCompletedEvent serialization exception:{}", e.getMessage());
             throw new RuntimeException("Serialization error", e);
         }
     }
@@ -56,6 +61,7 @@ public class PaymentEventProducer {
         try {
             return objectMapper.writeValueAsString(event);
         } catch (JsonProcessingException e) {
+            logger.info("PaymentFailedEvent serialization exception:{}", e.getMessage());
             throw new RuntimeException("Serialization error", e);
         }
     }
