@@ -3,6 +3,8 @@ package ru.bicev.hotel_booking.booking.kafka;
 import java.time.Instant;
 import java.util.UUID;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
@@ -16,6 +18,7 @@ import ru.bicev.hotel_booking.common.util.EventMapper;
 @Service
 public class BookingEventProducer {
 
+    private static final Logger logger = LoggerFactory.getLogger(BookingEventProducer.class);
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final ObjectMapper objectMapper;
 
@@ -30,12 +33,14 @@ public class BookingEventProducer {
         BookingCreatedEvent event = EventMapper.mapBookingToEvent(booking, eventId, timestamp);
         String json = serializeToJson(event);
         kafkaTemplate.send("booking.created", eventId.toString(), json);
+        logger.info("BookingCreatedEvent sent: {}", json);
     }
 
     private String serializeToJson(BookingCreatedEvent event) {
         try {
             return objectMapper.writeValueAsString(event);
         } catch (JsonProcessingException e) {
+            logger.error("BookingCreatedEvent serialzation error: {}", e.getMessage());
             throw new RuntimeException("Serialization error", e);
         }
     }

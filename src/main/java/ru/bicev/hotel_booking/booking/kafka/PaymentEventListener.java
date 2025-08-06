@@ -1,5 +1,7 @@
 package ru.bicev.hotel_booking.booking.kafka;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
@@ -13,6 +15,7 @@ import ru.bicev.hotel_booking.common.event.PaymentFailedEvent;
 @Component
 public class PaymentEventListener {
 
+    private static final Logger logger = LoggerFactory.getLogger(PaymentEventListener.class);
     private final ObjectMapper objectMapper;
     private final BookingService bookingService;
 
@@ -23,20 +26,24 @@ public class PaymentEventListener {
 
     @KafkaListener(topics = "payment.confirmed", groupId = "payment-confirmed-consumer")
     public void handlePaymentConfirmed(String message) {
+        logger.info("Received payment.confirmed message: {}", message);
         try {
             PaymentCompletedEvent event = objectMapper.readValue(message, PaymentCompletedEvent.class);
             bookingService.confirmBookingStatus(event.bookingId());
         } catch (JsonProcessingException e) {
+            logger.error("payment.confirmed deserialization error: {}", e.getMessage());
             throw new RuntimeException("Deserialization error", e);
         }
     }
 
     @KafkaListener(topics = "payment.failed", groupId = "payment-failed-consumer")
     public void handlePaymentCancelled(String message) {
+        logger.info("Received payment.failed message: {}", message);
         try {
             PaymentFailedEvent event = objectMapper.readValue(message, PaymentFailedEvent.class);
             bookingService.cancelBooking(event.bookingId());
         } catch (JsonProcessingException e) {
+            logger.error("payment.failed deserialization error: {}", e.getMessage());
             throw new RuntimeException("Deserialization error", e);
         }
     }

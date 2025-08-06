@@ -4,6 +4,8 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import jakarta.transaction.Transactional;
@@ -22,6 +24,7 @@ import ru.bicev.hotel_booking.room.service.RoomService;
 @Service
 public class BookingService {
 
+    private static final Logger logger = LoggerFactory.getLogger(BookingService.class);
     private final BookingRepository bookingRepository;
     private final RoomService roomService;
     private final BookingEventProducer bookingEventProducer;
@@ -36,6 +39,7 @@ public class BookingService {
 
     private ReentrantLock getLock(UUID roomId) {
         roomLocks.putIfAbsent(roomId, new ReentrantLock());
+        logger.info("Creating a lock for a room: {}", roomId);
         return roomLocks.get(roomId);
     }
 
@@ -50,6 +54,8 @@ public class BookingService {
         try {
             if (bookingRepository.existsDatesOverlapping(createBookingDto.roomId(), createBookingDto.checkIn(),
                     createBookingDto.checkOut())) {
+                logger.warn("BookingOverlappingException in BookingService id: {}, checkIn: {}, checkOut: {}",
+                        roomDto.id(), createBookingDto.checkIn(), createBookingDto.checkOut());
                 throw new BookingOverlappingException("Booking is not available for this dates");
             }
 
@@ -57,7 +63,7 @@ public class BookingService {
             var saved = bookingRepository.save(booking);
 
             bookingEventProducer.sendBookingCreatedEvent(saved);
-
+            logger.info("Booking created: {}", saved.getId());
             return mapToDto(saved);
         } finally {
             lock.unlock();
@@ -66,6 +72,7 @@ public class BookingService {
     }
 
     public BookingDto getBookingByUUID(UUID bookingId) {
+        logger.info("Getting booking with id: {}", bookingId);
         return bookingRepository.findById(bookingId).map(this::mapToDto)
                 .orElseThrow(() -> new BookingNotFoundException("Booking is not found: " + bookingId));
     }
@@ -73,6 +80,7 @@ public class BookingService {
     @Transactional
     public void deleteBooking(UUID bookingId) {
         bookingRepository.deleteById(bookingId);
+        logger.info("Deleting booking: {}", bookingId);
     }
 
     @Transactional
@@ -80,6 +88,7 @@ public class BookingService {
         var booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new BookingNotFoundException("Booking is not found: " + bookingId));
         booking.setStatus(BookingStatus.CONFIRMED);
+        logger.info("Booking confirmed: {}", bookingId);
         bookingRepository.save(booking);
 
     }
@@ -94,6 +103,7 @@ public class BookingService {
         }
 
         bookingRepository.delete(booking);
+        logger.info("Booking cancelled: {}", bookingId);
     }
 
     private BookingDto mapToDto(Booking booking) {
