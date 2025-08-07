@@ -20,6 +20,7 @@ import ru.bicev.hotel_booking.common.dto.BookingDto;
 import ru.bicev.hotel_booking.common.dto.CreateBookingDto;
 import ru.bicev.hotel_booking.common.exception.BookingNotFoundException;
 import ru.bicev.hotel_booking.common.exception.BookingOverlappingException;
+import ru.bicev.hotel_booking.common.exception.InvalidBooingDateException;
 
 @RestController
 @RequestMapping("/api/booking")
@@ -72,6 +73,12 @@ public class BookingController {
     public ResponseEntity<String> handleOverlappingException() {
         logger.warn("BookingOverlappingException handled in controller");
         return ResponseEntity.status(409).body("Booking overlaps with existing one");
+    }
+
+    @ExceptionHandler(InvalidBooingDateException.class)
+    public ResponseEntity<String> handleInvalidBookingDateException() {
+        logger.warn("InvalidBookingDateException handled in controller");
+        return ResponseEntity.status(400).body("Invalid booking dates");
     }
 
     @ExceptionHandler(RuntimeException.class)

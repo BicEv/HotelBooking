@@ -1,5 +1,6 @@
 package ru.bicev.hotel_booking.booking.service;
 
+import java.time.LocalDate;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
@@ -18,6 +19,7 @@ import ru.bicev.hotel_booking.common.entity.Booking;
 import ru.bicev.hotel_booking.common.enums.BookingStatus;
 import ru.bicev.hotel_booking.common.exception.BookingNotFoundException;
 import ru.bicev.hotel_booking.common.exception.BookingOverlappingException;
+import ru.bicev.hotel_booking.common.exception.InvalidBooingDateException;
 import ru.bicev.hotel_booking.common.util.RoomMapper;
 import ru.bicev.hotel_booking.room.service.RoomService;
 
@@ -45,7 +47,7 @@ public class BookingService {
 
     @Transactional
     public BookingDto createBooking(CreateBookingDto createBookingDto) {
-
+        validateBookingDates(createBookingDto.checkIn(), createBookingDto.checkOut());
         var roomDto = roomService.getRoomByUUID(createBookingDto.roomId());
 
         var lock = getLock(roomDto.id());
@@ -88,6 +90,7 @@ public class BookingService {
         var booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new BookingNotFoundException("Booking is not found: " + bookingId));
         booking.setStatus(BookingStatus.CONFIRMED);
+        bookingRepository.save(booking);
         logger.info("Booking confirmed: {}", bookingId);
         bookingRepository.save(booking);
 
@@ -123,6 +126,12 @@ public class BookingService {
         booking.setRoom(
                 RoomMapper.toEntity(roomDto));
         return booking;
+    }
+
+    private void validateBookingDates(LocalDate checkIn, LocalDate checkOut) {
+        if (checkIn.isAfter(checkOut) || checkIn.isBefore(LocalDate.now())) {
+            throw new InvalidBooingDateException("Invalid booking dates");
+        }
     }
 
 }
