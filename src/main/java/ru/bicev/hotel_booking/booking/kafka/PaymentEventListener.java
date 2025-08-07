@@ -24,14 +24,14 @@ public class PaymentEventListener {
         this.bookingService = bookingService;
     }
 
-    @KafkaListener(topics = "payment.confirmed", groupId = "payment-confirmed-consumer")
+    @KafkaListener(topics = "payment.completed", groupId = "payment-completed-consumer")
     public void handlePaymentConfirmed(String message) {
-        logger.info("Received payment.confirmed message: {}", message);
+        logger.info("Received payment.completed message: {}", message);
         try {
             PaymentCompletedEvent event = objectMapper.readValue(message, PaymentCompletedEvent.class);
             bookingService.confirmBookingStatus(event.bookingId());
         } catch (JsonProcessingException e) {
-            logger.error("payment.confirmed deserialization error: {}", e.getMessage());
+            logger.error("payment.completed deserialization error: {}", e.getMessage());
             throw new RuntimeException("Deserialization error", e);
         }
     }
