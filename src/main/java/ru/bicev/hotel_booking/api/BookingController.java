@@ -4,6 +4,7 @@ import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -61,6 +62,12 @@ public class BookingController {
         bookingService.cancelBooking(bookingId);
         logger.info("Booking cancelled in controller: {}", bookingId);
         return ResponseEntity.ok("Booking cancelled");
+    }
+
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<String> handleIllegalStateException() {
+        logger.warn("IllegalStateException in controller");
+        return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body("Can't cancel confirmed booking");
     }
 
     @ExceptionHandler(BookingNotFoundException.class)
