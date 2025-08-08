@@ -91,8 +91,7 @@ public class BookingService {
                 .orElseThrow(() -> new BookingNotFoundException("Booking is not found: " + bookingId));
         booking.setStatus(BookingStatus.CONFIRMED);
         bookingRepository.save(booking);
-        logger.info("Booking confirmed: {}", bookingId);
-        bookingRepository.save(booking);
+        logger.info("Booking confirmed: {}", bookingId);        
 
     }
 
