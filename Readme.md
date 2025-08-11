@@ -30,6 +30,7 @@ sequenceDiagram
     PaymentService-->>Kafka: publish payment.completed / payment.failed
     Kafka-->>BookingService: consume payment.completed / payment.failed
     BookingService->>Client: return booking status
+```
 
 ## Запуск проекта
 
